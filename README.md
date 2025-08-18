@@ -20,44 +20,6 @@ Final decision uses a **fusion** rule with safe fallbacks (handles LLM abstentio
 
 ---
 
-## Architecture
-
-
-grader-app/
-├─ package.json # root scripts (dev, eval, verify)
-├─ apps/
-│ ├─ frontend/ # Vite + React (Student + Admin)
-│ │ ├─ index.html
-│ │ └─ src/
-│ │ ├─ main.jsx # Router: "/" and "/admin"
-│ │ ├─ App.jsx # Student page
-│ │ ├─ api.js # HTTP helpers
-│ │ └─ pages/Admin.jsx # Admin page (live audits)
-│ ├─ backend/ # Express API + grading engine
-│ │ ├─ .env(.example)
-│ │ └─ src/
-│ │ ├─ server.js # routes & wiring (DB/Redis/queue)
-│ │ ├─ db.js # Postgres connection (shared with worker)
-│ │ ├─ repo/admin.js # query for /api/admin/results-full
-│ │ ├─ data/questions.sample.js
-│ │ ├─ grading/
-│ │ │ ├─ index.js # orchestrator (cache + gating + pipeline)
-│ │ │ ├─ rules.js # MCQ, numeric, formula checks
-│ │ │ ├─ embeddings.js# similarity + concept coverage
-│ │ │ ├─ fuse.js # signal fusion → final verdict
-│ │ │ ├─ judge.js # LLM judge (Ollama) + robust JSON parsing
-│ │ │ └─ providers/
-│ │ │ ├─ embeddings/xenova.js
-│ │ │ └─ llm/ollama.js
-│ │ ├─ utils/text.js
-│ │ └─ cache/lru.js
-│ └─ worker/ # (optional) async grading with BullMQ
-│ ├─ .env(.example)
-│ └─ src/index.js
-├─ infra/
-│ └─ docker-compose.yml # Postgres + Redis (local dev)
----
-
 ## Quick Start
 
 ```bash
