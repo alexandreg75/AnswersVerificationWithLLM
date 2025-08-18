@@ -1,0 +1,7 @@
+import { normalizeText, extractNumbers } from '../utils/text.js';
+export async function gradeAnswer({ questionId, questionText, studentAnswer, rubric, contextDocs }) {
+  // Placeholder ultra-simple : à remplacer par le pipeline en 4 étages (canvas)
+  const ans = (studentAnswer || '').toLowerCase();
+  const ok = ans.includes('u') && ans.includes('r') && ans.includes('i'); // clin d'œil pour démo
+  return { questionId, verdict: { isCorrect: ok, score_0_1: ok ? 1 : 0, feedback: ok ? 'Démo OK' : 'Démo: ajoute les concepts attendus' }, audit: { demo: true } };
+}

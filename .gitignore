@@ -1,0 +1,22 @@
+# Node
+node_modules/
+npm-debug.log*
+pnpm-lock.yaml
+yarn.lock
+
+# Builds / caches
+dist/
+build/
+.cache/
+.vite/
+coverage/
+.vscode/
+.DS_Store
+
+# Env
+.env
+apps/*/.env
+
+# Runtime
+*.log
+tmp/

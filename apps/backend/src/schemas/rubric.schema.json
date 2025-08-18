@@ -1,0 +1,10 @@
+{ "$schema":"https://json-schema.org/draft/2020-12/schema", "title":"Rubric", "type":"object",
+  "properties":{
+    "concepts":{"type":"array","items":{"type":"object","properties":{
+      "label":{"type":"string"},"poids":{"type":"number"},"synonymes":{"type":"array","items":{"type":"string"}}
+    },"required":["label","poids"],"additionalProperties":false}},
+    "references":{"type":"array","items":{"type":"string"}},
+    "numericTolerance":{"type":"object","properties":{"abs":{"type":"number"},"rel":{"type":"number"}},"additionalProperties":false},
+    "mcq":{"type":"object","properties":{"options":{"type":"array","items":{"type":"string"}},"correctIndices":{"type":"array","items":{"type":"integer"}}},"additionalProperties":false}
+  },
+  "required":["concepts"], "additionalProperties":true }

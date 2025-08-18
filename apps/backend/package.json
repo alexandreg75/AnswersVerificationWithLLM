@@ -1,0 +1,21 @@
+{
+  "name": "grader-backend",
+  "type": "module",
+  "scripts": {
+    "dev": "NODE_ENV=development node src/server.js",
+    "start": "NODE_ENV=production node src/server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@xenova/transformers": "^2.17.2",
+    "ajv": "^8.16.0",
+    "body-parser": "^2.2.0",
+    "bullmq": "^5.57.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "ioredis": "^5.7.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.3"
+  }
+}
