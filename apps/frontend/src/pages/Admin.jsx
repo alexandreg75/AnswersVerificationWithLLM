@@ -1,191 +1,276 @@
-import { useEffect, useMemo, useState } from 'react';
-import { fetchAdminResultsFull } from '../api';
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { fetchAdminResultsFull } from '../api'
 
-function Badge({ ok }) {
+/* ─── Shared Navbar (same as App.jsx) ────────────────────────────────── */
+function Navbar() {
+  const { pathname } = useLocation()
   return (
-    <span className={"px-2 py-0.5 rounded text-sm " + (ok ? "bg-green-100 text-green-800" : "bg-rose-100 text-rose-800")}>
-      {ok ? "Correct" : "À revoir"}
-    </span>
-  );
+    <nav className="navbar">
+      <div className="navbar__inner">
+        <Link to="/" className="navbar__brand" style={{ textDecoration: 'none' }}>
+          <div className="navbar__brand-icon">G</div>
+          GradeAI
+        </Link>
+        <div className="navbar__nav">
+          <Link to="/" className={'navbar__link' + (pathname === '/' ? ' navbar__link--active' : '')}>
+            Étudiant
+          </Link>
+          <Link to="/admin" className={'navbar__link' + (pathname === '/admin' ? ' navbar__link--active' : '')}>
+            Administration
+          </Link>
+        </div>
+      </div>
+    </nav>
+  )
 }
 
-function NeedsReviewBadge() {
-  return <span className="ml-2 px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-800 border border-yellow-300">Revue humaine</span>;
+/* ─── Sub-components ─────────────────────────────────────────────────── */
+function Badge({ ok }) {
+  return (
+    <span className={'badge ' + (ok ? 'badge--success' : 'badge--error')}>
+      {ok ? '✓ Correct' : '✗ À revoir'}
+    </span>
+  )
+}
+
+function ReviewBadge() {
+  return <span className="badge badge--warning" style={{ marginLeft: 6 }}>Revue humaine</span>
 }
 
 function JsonBlock({ obj }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
   return (
     <div>
-      <button onClick={() => setOpen(v => !v)} className="text-blue-600 underline text-sm">
-        {open ? "Masquer audit" : "Afficher audit"}
+      <button className="json-toggle" onClick={() => setOpen(v => !v)}>
+        {open ? '▴ Masquer' : '▾ Afficher'} audit
       </button>
       {open && (
-        <pre className="mt-2 p-3 bg-gray-50 rounded border overflow-auto text-xs">
-          {JSON.stringify(obj, null, 2)}
-        </pre>
+        <pre className="json-pre">{JSON.stringify(obj, null, 2)}</pre>
       )}
     </div>
-  );
+  )
 }
 
-function AnswerCell({ text, expand }) {
-  const [open, setOpen] = useState(!!expand);
-  if (!text) return <span className="text-gray-400">—</span>;
+function AnswerCell({ text }) {
+  const [open, setOpen] = useState(false)
+  if (!text) return <span className="text-subtle">—</span>
 
-  const MAX = 140;
-  const short = String(text).slice(0, MAX);
-  const isLong = String(text).length > MAX;
-  const shown = open || !isLong ? String(text) : short + "…";
+  const MAX = 120
+  const full = String(text)
+  const isLong = full.length > MAX
+  const shown = open || !isLong ? full : full.slice(0, MAX) + '…'
 
   async function copy() {
-    try { await navigator.clipboard.writeText(String(text)); } catch {}
+    try { await navigator.clipboard.writeText(full) } catch {}
   }
 
   return (
-    <div className="max-w-xs">
-      <div className="whitespace-pre-wrap break-words text-sm">{shown}</div>
-      <div className="mt-1 flex gap-3">
+    <div style={{ maxWidth: 260 }}>
+      <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', fontSize: '0.85rem' }}>{shown}</div>
+      <div style={{ marginTop: 4, display: 'flex', gap: 10 }}>
         {isLong && (
-          <button onClick={() => setOpen(v => !v)} className="text-blue-600 underline text-xs">
-            {open ? "Réduire" : "Voir plus"}
+          <button className="json-toggle" onClick={() => setOpen(v => !v)}>
+            {open ? 'Réduire' : 'Voir plus'}
           </button>
         )}
-        <button onClick={copy} className="text-gray-600 underline text-xs">Copier</button>
+        <button className="json-toggle" onClick={copy} style={{ color: 'var(--c-text-muted)' }}>
+          Copier
+        </button>
       </div>
     </div>
-  );
+  )
 }
 
-// Heuristique : nécessite revue humaine ?
-// - feedback contient explicitement "Revue humaine"
-// - OU le LLM s'est abstenu (confidence=0) et le verdict est KO
+/* ─── Helpers ────────────────────────────────────────────────────────── */
 function needsHumanReview(row) {
-  const fb = String(row.feedback || "").toLowerCase();
-  const audit = row.audit || {};
-  const conf = Number(audit?.judge?.confidence_0_1 ?? 0);
-  return (!row.is_correct) && (fb.includes("revue humaine") || conf === 0);
+  const fb   = String(row.feedback || '').toLowerCase()
+  const conf = Number(row.audit?.judge?.confidence_0_1 ?? 0)
+  return !row.is_correct && (fb.includes('revue humaine') || conf === 0)
 }
 
+function fmt(dateStr) {
+  return new Date(dateStr).toLocaleString('fr-FR', {
+    day: '2-digit', month: '2-digit', year: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+  })
+}
+
+/* ─── Page ───────────────────────────────────────────────────────────── */
 export default function Admin() {
-  const [items, setItems] = useState([]);
-  const [limit, setLimit] = useState(50);
-  const [only, setOnly] = useState('all'); // all | ok | ko | review
-  const [q, setQ] = useState('');
-  const [intervalMs, setIntervalMs] = useState(5000);
-  const [loading, setLoading] = useState(false);
+  const [items,      setItems]      = useState([])
+  const [limit,      setLimit]      = useState(50)
+  const [only,       setOnly]       = useState('all')
+  const [q,          setQ]          = useState('')
+  const [intervalMs, setIntervalMs] = useState(5000)
+  const [loading,    setLoading]    = useState(false)
 
   async function load() {
-    setLoading(true);
+    setLoading(true)
     try {
-      const data = await fetchAdminResultsFull({ limit });
-      setItems(data.items || []);
+      const data = await fetchAdminResultsFull({ limit })
+      setItems(data.items || [])
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
-  useEffect(() => { load(); }, [limit]);
+  useEffect(() => { load() }, [limit])
   useEffect(() => {
-    if (!intervalMs) return;
-    const id = setInterval(load, intervalMs);
-    return () => clearInterval(id);
-  }, [intervalMs, limit]);
+    if (!intervalMs) return
+    const id = setInterval(load, intervalMs)
+    return () => clearInterval(id)
+  }, [intervalMs, limit])
 
   const filtered = useMemo(() => {
-    return (items || [])
+    return items
       .filter(it => {
-        if (only === 'ok') return !!it.is_correct;
-        if (only === 'ko') return !it.is_correct;
-        if (only === 'review') return needsHumanReview(it);
-        return true;
+        if (only === 'ok')     return !!it.is_correct
+        if (only === 'ko')     return !it.is_correct
+        if (only === 'review') return needsHumanReview(it)
+        return true
       })
-      .filter(it => !q || (String(it.question_id||'').toLowerCase().includes(q.toLowerCase())
-                        || String(it.feedback||'').toLowerCase().includes(q.toLowerCase())
-                        || String(it.answer||'').toLowerCase().includes(q.toLowerCase())));
-  }, [items, only, q]);
+      .filter(it =>
+        !q ||
+        String(it.question_id || '').toLowerCase().includes(q.toLowerCase()) ||
+        String(it.feedback    || '').toLowerCase().includes(q.toLowerCase()) ||
+        String(it.answer      || '').toLowerCase().includes(q.toLowerCase())
+      )
+  }, [items, only, q])
+
+  const nbCorrect  = filtered.filter(r => r.is_correct).length
+  const nbReview   = filtered.filter(r => needsHumanReview(r)).length
+  const avgScore   = filtered.length
+    ? (filtered.reduce((s, r) => s + (Number(r.score_0_1) || 0), 0) / filtered.length).toFixed(2)
+    : '—'
 
   return (
-    <div className="p-6 max-w-[1200px] mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Admin · Live audits</h1>
-        <a href="/" className="text-blue-600 underline">← Retour élève</a>
-      </div>
+    <>
+      <Navbar />
+      <div className="page">
+        <div className="container--wide">
 
-      <div className="flex gap-4 items-end flex-wrap mb-4">
-        <div>
-          <label className="block text-sm text-gray-600">Afficher</label>
-          <select value={only} onChange={e => setOnly(e.target.value)} className="border rounded px-2 py-1">
-            <option value="all">Tous</option>
-            <option value="ok">Corrects</option>
-            <option value="ko">À revoir</option>
-            <option value="review">À revoir (humain)</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm text-gray-600">Limit</label>
-          <input type="number" min={1} max={500} value={limit}
-                 onChange={e => setLimit(Number(e.target.value)||50)}
-                 className="border rounded px-2 py-1 w-24"/>
-        </div>
-        <div>
-          <label className="block text-sm text-gray-600">Auto-refresh</label>
-          <select value={intervalMs} onChange={e => setIntervalMs(Number(e.target.value))}
-                  className="border rounded px-2 py-1">
-            <option value={0}>Désactivé</option>
-            <option value={2000}>2 s</option>
-            <option value={5000}>5 s</option>
-            <option value={10000}>10 s</option>
-          </select>
-        </div>
-        <div className="flex-1">
-          <label className="block text-sm text-gray-600">Recherche</label>
-          <input value={q} onChange={e => setQ(e.target.value)}
-                 placeholder="question_id, feedback, réponse…"
-                 className="border rounded px-2 py-1 w-full"/>
-        </div>
-        <button onClick={load} className="px-3 py-2 bg-gray-800 text-white rounded">{loading ? "…" : "Rafraîchir"}</button>
-      </div>
+          <div className="page-header">
+            <h1>Tableau de bord — Administration</h1>
+            <p>Suivi en temps réel des soumissions et audits automatiques.</p>
+          </div>
 
-      <div className="border rounded overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr className="text-left">
-              <th className="p-2">Date</th>
-              <th className="p-2">Question</th>
-              <th className="p-2">État</th>
-              <th className="p-2">Score</th>
-              <th className="p-2">Réponse</th>
-              <th className="p-2">Feedback</th>
-              <th className="p-2">Audit</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((r) => {
-              const review = needsHumanReview(r);
-              return (
-                <tr key={r.id} className={"border-t align-top " + (review ? "bg-yellow-50" : "")}>
-                  <td className="p-2 whitespace-nowrap">{new Date(r.created_at).toLocaleString()}</td>
-                  <td className="p-2">{r.question_id}</td>
-                  <td className="p-2">
-                    <Badge ok={r.is_correct} />
-                    {review && <NeedsReviewBadge />}
-                  </td>
-                  <td className="p-2">{(r.score_0_1!=null) ? Number(r.score_0_1).toFixed(2) : ''}</td>
-                  <td className="p-2">
-                    <AnswerCell text={r.answer} expand={review} />
-                  </td>
-                  <td className="p-2">{r.feedback}</td>
-                  <td className="p-2"><JsonBlock obj={r.audit || r.verdict || {}} /></td>
+          {/* Stats */}
+          <div className="stats-row">
+            <div className="stat-card">
+              <div className="stat-card__value">{filtered.length}</div>
+              <div className="stat-card__label">Soumissions</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card__value" style={{ color: 'var(--c-success)' }}>{nbCorrect}</div>
+              <div className="stat-card__label">Correctes</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card__value" style={{ color: 'var(--c-error)' }}>{filtered.length - nbCorrect}</div>
+              <div className="stat-card__label">À revoir</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card__value" style={{ color: 'var(--c-warning)' }}>{nbReview}</div>
+              <div className="stat-card__label">Revue humaine</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-card__value">{avgScore}</div>
+              <div className="stat-card__label">Score moyen</div>
+            </div>
+          </div>
+
+          {/* Toolbar */}
+          <div className="toolbar">
+            <div className="toolbar__field">
+              <label className="form-label">Afficher</label>
+              <select className="form-input" value={only} onChange={e => setOnly(e.target.value)}>
+                <option value="all">Tous</option>
+                <option value="ok">Corrects</option>
+                <option value="ko">À revoir</option>
+                <option value="review">Revue humaine</option>
+              </select>
+            </div>
+            <div className="toolbar__field">
+              <label className="form-label">Limite</label>
+              <input
+                type="number" min={1} max={500}
+                className="form-input" style={{ width: 90 }}
+                value={limit}
+                onChange={e => setLimit(Number(e.target.value) || 50)}
+              />
+            </div>
+            <div className="toolbar__field">
+              <label className="form-label">Auto-refresh</label>
+              <select className="form-input" value={intervalMs} onChange={e => setIntervalMs(Number(e.target.value))}>
+                <option value={0}>Désactivé</option>
+                <option value={2000}>2 s</option>
+                <option value={5000}>5 s</option>
+                <option value={10000}>10 s</option>
+              </select>
+            </div>
+            <div className="toolbar__field toolbar__field--grow">
+              <label className="form-label">Recherche</label>
+              <input
+                className="form-input"
+                value={q}
+                onChange={e => setQ(e.target.value)}
+                placeholder="question_id, feedback, réponse…"
+              />
+            </div>
+            <button className="btn btn--ghost" onClick={load}>
+              {loading ? '…' : '↻ Rafraîchir'}
+            </button>
+          </div>
+
+          {/* Table */}
+          <div className="table-wrap">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Question</th>
+                  <th>État</th>
+                  <th>Score</th>
+                  <th>Réponse</th>
+                  <th>Feedback</th>
+                  <th>Audit</th>
                 </tr>
-              );
-            })}
-            {!filtered.length && (
-              <tr><td className="p-4 text-center text-gray-500" colSpan={7}>Aucun résultat</td></tr>
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {filtered.map(r => {
+                  const review = needsHumanReview(r)
+                  return (
+                    <tr key={r.id} className={review ? 'row--review' : ''}>
+                      <td style={{ whiteSpace: 'nowrap', fontSize: '0.8rem', color: 'var(--c-text-muted)' }}>
+                        {fmt(r.created_at)}
+                      </td>
+                      <td style={{ fontWeight: 500 }}>{r.question_id}</td>
+                      <td>
+                        <Badge ok={r.is_correct} />
+                        {review && <ReviewBadge />}
+                      </td>
+                      <td style={{ fontWeight: 600 }}>
+                        {r.score_0_1 != null ? Number(r.score_0_1).toFixed(2) : '—'}
+                      </td>
+                      <td><AnswerCell text={r.answer} /></td>
+                      <td style={{ fontSize: '0.85rem', color: 'var(--c-text-muted)', maxWidth: 280 }}>
+                        {r.feedback}
+                      </td>
+                      <td><JsonBlock obj={r.audit || r.verdict || {}} /></td>
+                    </tr>
+                  )
+                })}
+                {!filtered.length && (
+                  <tr className="empty">
+                    <td colSpan={7}>Aucun résultat</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
       </div>
-    </div>
-  );
+    </>
+  )
 }

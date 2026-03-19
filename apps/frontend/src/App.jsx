@@ -1,82 +1,173 @@
 import { useEffect, useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+
+function Navbar() {
+  const { pathname } = useLocation()
+  return (
+    <nav className="navbar">
+      <div className="navbar__inner">
+        <Link to="/" className="navbar__brand" style={{ textDecoration: 'none' }}>
+          <div className="navbar__brand-icon">G</div>
+          GradeAI
+        </Link>
+        <div className="navbar__nav">
+          <Link to="/" className={'navbar__link' + (pathname === '/' ? ' navbar__link--active' : '')}>
+            Étudiant
+          </Link>
+          <Link to="/admin" className={'navbar__link' + (pathname === '/admin' ? ' navbar__link--active' : '')}>
+            Administration
+          </Link>
+        </div>
+      </div>
+    </nav>
+  )
+}
+
+export { Navbar }
 
 export default function App() {
   const [loading, setLoading] = useState(true)
   const [questions, setQuestions] = useState([])
   const [answers, setAnswers] = useState({})
   const [results, setResults] = useState(null)
+  const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    (async () => {
+    ;(async () => {
       try {
         const res = await fetch('/api/questions')
         const data = await res.json()
         setQuestions(data.items || [])
-      } catch (e) {
-        setError("Impossible de charger les questions")
-      } finally { setLoading(false) }
+      } catch {
+        setError('Impossible de charger les questions.')
+      } finally {
+        setLoading(false)
+      }
     })()
   }, [])
 
-  const canSubmit = questions.length && questions.every(q => (answers[q.id] || '').trim())
+  const filledCount = questions.filter(q => (answers[q.id] || '').trim()).length
+  const canSubmit = !submitting && questions.length > 0 && filledCount === questions.length
 
   async function submit() {
+    setSubmitting(true)
+    setResults(null)
+    setError('')
     try {
-      setResults(null); setError('')
       const res = await fetch('/api/student/submit', {
-        method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ answers: questions.map(q => ({ questionId: q.id, studentAnswer: answers[q.id] || '' })) })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          answers: questions.map(q => ({ questionId: q.id, studentAnswer: answers[q.id] || '' })),
+        }),
       })
-      const data = await res.json()
-      setResults(data)
-    } catch (e) {
-      setError("Soumission échouée")
+      setResults(await res.json())
+    } catch {
+      setError('La soumission a échoué. Veuillez réessayer.')
+    } finally {
+      setSubmitting(false)
     }
   }
 
-  if (loading) return <p style={{padding:16}}>Chargement…</p>
-  if (error) return <p style={{padding:16, color:'crimson'}}>{error}</p>
+  const correct = results?.summary?.correct ?? 0
+  const total   = results?.summary?.total   ?? 0
+  const pct     = total > 0 ? Math.round((correct / total) * 100) : 0
+  const pass    = pct >= 50
 
   return (
-    <div style={{maxWidth: 720, margin: '24px auto', fontFamily: 'system-ui, sans-serif'}}>
-      <h1>Évaluation automatique — Démo Étudiant</h1>
-      <p>Réponds puis envoie pour correction.</p>
-      <div style={{display:'grid', gap:16, marginTop:16}}>
-        {questions.map((q, i) => (
-          <div key={q.id} style={{border:'1px solid #ddd', borderRadius:12, padding:16, background:'#fff'}}>
-            <div style={{display:'flex', justifyContent:'space-between'}}>
-              <strong>{i+1}. {q.text}</strong>
-              <span style={{fontSize:12, background:'#f1f1f1', padding:'2px 8px', borderRadius:999}}>{(q.type || 'open').toUpperCase()}</span>
-            </div>
-            <textarea rows={3} style={{width:'100%', marginTop:8}}
-              value={answers[q.id] || ''} onChange={e => setAnswers(a => ({...a, [q.id]: e.target.value}))}
-              placeholder="Ta réponse…" />
+    <>
+      <Navbar />
+      <div className="page">
+        <div className="container">
+          <div className="page-header">
+            <h1>Évaluation automatique</h1>
+            <p>Répondez à chaque question puis soumettez pour correction instantanée.</p>
           </div>
-        ))}
-      </div>
-      <div style={{display:'flex', alignItems:'center', gap:12, marginTop:16}}>
-        <button disabled={!canSubmit} onClick={submit} style={{padding:'8px 14px', borderRadius:10}}>
-          Envoyer mes réponses
-        </button>
-        {results && <span>Résumé: {results.summary?.correct ?? 0}/{results.summary?.total ?? 0} justes</span>}
-      </div>
-      {results && (
-        <div style={{marginTop:16, display:'grid', gap:12}}>
-          <h2>Résultats</h2>
-          {results.results?.map(r => (
-            <div key={r.questionId} style={{border:'1px solid #eee', padding:12, borderRadius:10, background:'#fff'}}>
-              <div style={{display:'flex', gap:8, alignItems:'center'}}>
-                <span style={{fontSize:12, padding:'2px 8px', borderRadius:999, background: r.verdict?.isCorrect ? '#e6ffed' : '#ffe6e6'}}>
-                  {r.verdict?.isCorrect ? 'Correct' : 'Incorrect'}
-                </span>
-                <span style={{fontSize:12}}>Score: {Math.round((r.verdict?.score_0_1 ?? 0)*100)}%</span>
+
+          {loading && <div className="loading">Chargement des questions…</div>}
+          {error   && <div className="error-msg">{error}</div>}
+
+          {!loading && !error && (
+            <>
+              <div className="form-grid">
+                {questions.map((q, i) => (
+                  <div key={q.id} className="question-card">
+                    <div className="question-card__header">
+                      <div>
+                        <div className="question-card__num">Question {i + 1}</div>
+                        <div className="question-card__text">{q.text}</div>
+                      </div>
+                      <span className="badge badge--type">{(q.type || 'open').toUpperCase()}</span>
+                    </div>
+                    <textarea
+                      className="form-input"
+                      rows={3}
+                      value={answers[q.id] || ''}
+                      onChange={e => setAnswers(a => ({ ...a, [q.id]: e.target.value }))}
+                      placeholder="Votre réponse…"
+                    />
+                  </div>
+                ))}
               </div>
-              {r.verdict?.feedback && <div style={{fontSize:14, marginTop:4}}>Feedback: {r.verdict.feedback}</div>}
-            </div>
-          ))}
+
+              <div className="submit-bar">
+                <button className="btn btn--primary" disabled={!canSubmit} onClick={submit}>
+                  {submitting ? 'Envoi en cours…' : 'Soumettre mes réponses'}
+                </button>
+                <span className="submit-summary">
+                  {filledCount < questions.length
+                    ? <>{filledCount} / {questions.length} réponses complétées</>
+                    : results
+                      ? <>Score : <strong>{correct}/{total}</strong> — {pct} %</>
+                      : <>Toutes les réponses sont complètes</>
+                  }
+                </span>
+              </div>
+
+              {results && (
+                <div className="results-section">
+                  <h2>Résultats</h2>
+
+                  <div className={'score-banner ' + (pass ? 'score-banner--pass' : 'score-banner--fail')}>
+                    <div>
+                      <div className="score-banner__label">Score global</div>
+                      <div className="score-banner__value">{correct} / {total} bonnes réponses</div>
+                    </div>
+                    <div className="score-banner__value">{pct} %</div>
+                  </div>
+
+                  <div className="form-grid">
+                    {results.results?.map((r, i) => {
+                      const ok  = r.verdict?.isCorrect
+                      const pct = Math.round((r.verdict?.score_0_1 ?? 0) * 100)
+                      const q   = questions.find(x => x.id === r.questionId)
+                      return (
+                        <div key={r.questionId} className={'result-item ' + (ok ? 'result-item--correct' : 'result-item--incorrect')}>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--c-text-muted)', fontWeight: 500 }}>
+                            Question {i + 1}{q ? ` — ${q.text}` : ''}
+                          </div>
+                          <div className="result-item__meta">
+                            <span className={'badge ' + (ok ? 'badge--success' : 'badge--error')}>
+                              {ok ? '✓ Correct' : '✗ Incorrect'}
+                            </span>
+                            <span className="result-item__score">Score : {pct} %</span>
+                          </div>
+                          {r.verdict?.feedback && (
+                            <div className="result-item__feedback">
+                              <strong>Feedback :</strong> {r.verdict.feedback}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
-      )}
-    </div>
+      </div>
+    </>
   )
 }
