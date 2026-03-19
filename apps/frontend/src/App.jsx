@@ -7,8 +7,8 @@ function Navbar() {
     <nav className="navbar">
       <div className="navbar__inner">
         <Link to="/" className="navbar__brand" style={{ textDecoration: 'none' }}>
-          <div className="navbar__brand-icon">G</div>
-          GradeAI
+          <div className="navbar__brand-icon">S</div>
+          SupraProf
         </Link>
         <div className="navbar__nav">
           <Link to="/" className={'navbar__link' + (pathname === '/' ? ' navbar__link--active' : '')}>
@@ -81,7 +81,7 @@ export default function App() {
       <div className="page">
         <div className="container">
           <div className="page-header">
-            <h1>Évaluation automatique</h1>
+            <h1>SupraProf</h1>
             <p>Répondez à chaque question puis soumettez pour correction instantanée.</p>
           </div>
 
