@@ -1,0 +1,47 @@
+[
+  { "id": 1,  "questionId": "q-capitale",    "studentAnswer": "1",          "expected": true,  "path": "rules",              "note": "QCM correct — Paris" },
+  { "id": 2,  "questionId": "q-capitale",    "studentAnswer": "2",          "expected": false, "path": "rules",              "note": "QCM incorrect — Lyon" },
+  { "id": 3,  "questionId": "q-capitale",    "studentAnswer": "3",          "expected": false, "path": "rules",              "note": "QCM incorrect — Marseille" },
+  { "id": 4,  "questionId": "q-primes",      "studentAnswer": "1,3",        "expected": true,  "path": "rules",              "note": "QCM multi correct — 2 et 11 sont premiers" },
+  { "id": 5,  "questionId": "q-primes",      "studentAnswer": "1",          "expected": false, "path": "rules",              "note": "QCM multi incomplet — oubli de 11" },
+  { "id": 6,  "questionId": "q-primes",      "studentAnswer": "2,4",        "expected": false, "path": "rules",              "note": "QCM multi incorrect — 9 et 15 ne sont pas premiers" },
+
+  { "id": 7,  "questionId": "q-2pi",         "studentAnswer": "6.28",       "expected": true,  "path": "rules",              "note": "Numérique correct — dans la tolérance ±0.01" },
+  { "id": 8,  "questionId": "q-2pi",         "studentAnswer": "6.29",       "expected": true,  "path": "rules",              "note": "Numérique correct — 6.29 - 6.28318 = 0.007 < 0.01" },
+  { "id": 9,  "questionId": "q-2pi",         "studentAnswer": "6.30",       "expected": false, "path": "rules",              "note": "Numérique incorrect — 6.30 - 6.28318 = 0.017 > 0.01" },
+  { "id": 10, "questionId": "q-2pi",         "studentAnswer": "3.14",       "expected": false, "path": "rules",              "note": "Numérique incorrect — confondu avec π" },
+  { "id": 11, "questionId": "q-disk-area",   "studentAnswer": "12.57",      "expected": true,  "path": "rules",              "note": "Numérique correct — dans tolérance ±0.02" },
+  { "id": 12, "questionId": "q-disk-area",   "studentAnswer": "12.50",      "expected": false, "path": "rules",              "note": "Numérique incorrect — trop loin de 12.566" },
+
+  { "id": 13, "questionId": "q-ohm",         "studentAnswer": "U = R × I",  "expected": true,  "path": "rules",              "note": "Règle Ohm — formule exacte reconnue" },
+  { "id": 14, "questionId": "q-ohm",         "studentAnswer": "La loi d'Ohm dit que U = R * I, la tension est proportionnelle au courant", "expected": true,  "path": "rules", "note": "Règle Ohm — formule dans une phrase" },
+  { "id": 15, "questionId": "q-power",       "studentAnswer": "P = U × I",  "expected": true,  "path": "rules",              "note": "Règle puissance — formule exacte reconnue" },
+  { "id": 16, "questionId": "q-power",       "studentAnswer": "La puissance vaut P=UI", "expected": true, "path": "rules", "note": "Règle puissance — formule compacte reconnue" },
+  { "id": 17, "questionId": "q-power",       "studentAnswer": "P = R × I²", "expected": false, "path": "skip_easy_negative", "note": "Formule de puissance alternative, hors rubric P=UI" },
+
+  { "id": 18, "questionId": "q-merge-sort",  "studentAnswer": "Le tri fusion est un algorithme stable, de complexité O(n log n), basé sur diviser pour régner.", "expected": true,  "path": "skip_easy_positive", "note": "Merge sort — tous les concepts présents, coverage=1.0" },
+  { "id": 19, "questionId": "q-photosynthese","studentAnswer": "La photosynthèse convertit l'énergie lumineuse en glucose grâce à la chlorophylle en absorbant le CO2 et en libérant de l'oxygène.", "expected": true, "path": "skip_easy_positive", "note": "Photosynthèse — tous les 5 concepts présents, coverage=1.0" },
+  { "id": 20, "questionId": "q-photosynthese","studentAnswer": "Les plantes utilisent le soleil et le CO2 pour fabriquer du sucre, en rejetant de l'oxygène.", "expected": true, "path": "skip_easy_positive", "note": "Photosynthèse — synonymes: soleil, sucre, O2, CO2 — coverage~0.8" },
+  { "id": 21, "questionId": "q-am-gm",       "studentAnswer": "Comme (a-b)^2 >= 0, on développe a^2 - 2ab + b^2 >= 0, donc a^2 + 2ab + b^2 >= 4ab, soit (a+b)^2 >= 4ab.", "expected": true, "path": "skip_easy_positive", "note": "AM-GM — preuve complète, tous les concepts présents" },
+  { "id": 22, "questionId": "q-overfitting", "studentAnswer": "Le surapprentissage correspond à un modèle trop complexe qui s'ajuste très bien aux données d'entraînement (faible erreur) mais généralise mal avec une variance élevée.", "expected": true, "path": "skip_easy_positive", "note": "Overfitting — coverage=1.0, tous les concepts" },
+
+  { "id": 23, "questionId": "q-merge-sort",  "studentAnswer": "C'est un tri à bulles rapide.", "expected": false, "path": "skip_easy_negative", "note": "Merge sort — mauvais algorithme, coverage=0" },
+  { "id": 24, "questionId": "q-merge-sort",  "studentAnswer": "Un algorithme de tri avec une complexité logarithmique.", "expected": false, "path": "skip_easy_negative", "note": "Merge sort — 'logarithmique' ne matche pas 'O(n log n)', coverage=0" },
+  { "id": 25, "questionId": "q-photosynthese","studentAnswer": "C'est le processus de respiration cellulaire des plantes.", "expected": false, "path": "skip_easy_negative", "note": "Photosynthèse confondue avec respiration, coverage=0" },
+  { "id": 26, "questionId": "q-overfitting", "studentAnswer": "C'est quand le modèle ne converge pas pendant l'entraînement.", "expected": false, "path": "skip_easy_negative", "note": "Overfitting — description de non-convergence, sans rapport" },
+  { "id": 27, "questionId": "q-ohm",         "studentAnswer": "La puissance est le produit de la tension et du courant.", "expected": false, "path": "skip_easy_negative", "note": "Loi d'Ohm — réponse hors sujet (décrit P=UI)" },
+  { "id": 28, "questionId": "q-am-gm",       "studentAnswer": "Par l'inégalité de Cauchy-Schwarz on obtient le résultat.", "expected": false, "path": "skip_easy_negative", "note": "AM-GM — mauvaise preuve, coverage=0" },
+
+  { "id": 29, "questionId": "q-merge-sort",  "studentAnswer": "Tri stable avec une complexité en O(n log n).", "expected": true,  "path": "llm_judge", "note": "Merge sort — stable+O(n log n) présents, coverage=0.66, manque diviser pour régner" },
+  { "id": 30, "questionId": "q-merge-sort",  "studentAnswer": "Algorithme récursif qui divise le tableau en deux, trie chaque moitié puis fusionne les résultats.", "expected": true,  "path": "llm_judge", "note": "Merge sort — diviser pour régner implicite via 'divise+fusionne', LLM doit juger" },
+  { "id": 31, "questionId": "q-merge-sort",  "studentAnswer": "Le tri fusion utilise la technique divide and conquer mais sa complexité est O(n²).", "expected": false, "path": "llm_judge", "note": "Merge sort — divide and conquer correct mais complexité fausse" },
+  { "id": 32, "questionId": "q-photosynthese","studentAnswer": "Les plantes utilisent la lumière et le CO2 pour produire de l'énergie.", "expected": false, "path": "llm_judge", "note": "Photosynthèse — lumière+CO2 présents (coverage=0.4), énergie≠glucose, manque chlorophylle et O2" },
+  { "id": 33, "questionId": "q-photosynthese","studentAnswer": "La photosynthèse utilise la lumière, le dioxyde de carbone pour produire du glucose.", "expected": true,  "path": "llm_judge", "note": "Photosynthèse — lumière+CO2+glucose (coverage=0.6), manque chlorophylle et oxygène" },
+  { "id": 34, "questionId": "q-overfitting", "studentAnswer": "Un modèle qui mémorise les données d'entraînement et a une variance élevée sur les nouvelles données.", "expected": true,  "path": "llm_judge", "note": "Overfitting — mémorisation (0.34) + variance élevée (0.33) = coverage 0.67" },
+  { "id": 35, "questionId": "q-overfitting", "studentAnswer": "Un modèle surappris a une forte erreur sur les données de test.", "expected": true,  "path": "llm_judge", "note": "Overfitting — forte erreur test = généralisation faible (0.33), coverage partielle" },
+  { "id": 36, "questionId": "q-ohm",         "studentAnswer": "La tension U est proportionnelle à l'intensité I, avec la résistance comme coefficient.", "expected": true,  "path": "llm_judge", "note": "Ohm — tension+intensité+proportionnalité = coverage 0.5, LLM valide la compréhension" },
+  { "id": 37, "questionId": "q-ohm",         "studentAnswer": "La résistance d'un circuit s'oppose au passage du courant électrique.", "expected": false, "path": "llm_judge", "note": "Ohm — courant présent mais formule U=RI absente, réponse incomplète" },
+  { "id": 38, "questionId": "q-am-gm",       "studentAnswer": "On développe (a+b)^2 = a^2+2ab+b^2, et puisque les carrés sont positifs, on conclut que (a+b)^2 >= 4ab.", "expected": true,  "path": "llm_judge", "note": "AM-GM — développement (0.3) + carre positif (0.4) = coverage 0.7, conclusion implicite" },
+  { "id": 39, "questionId": "q-am-gm",       "studentAnswer": "En partant de (a-b)^2 >= 0 on développe et on trouve le résultat.", "expected": true,  "path": "llm_judge", "note": "AM-GM — (a-b)^2>=0 présent (0.4), développement implicite, conclusion vague" },
+  { "id": 40, "questionId": "q-am-gm",       "studentAnswer": "On pose (a+b)^2 et 4ab et on montre qu'ils sont égaux.", "expected": false, "path": "llm_judge", "note": "AM-GM — affirme égalité au lieu d'inégalité, raisonnement faux" }
+]

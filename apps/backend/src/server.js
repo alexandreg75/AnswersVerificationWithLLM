@@ -5,6 +5,7 @@ import bodyParser from 'body-parser';
 
 import { QUESTIONS, QUESTIONS_BY_ID } from './data/questions.sample.js';
 import { gradeAnswer } from './grading/index.js';
+import { getEmbedder } from './grading/providers/embeddings/xenova.js';
 import { initDb } from './db.js';
 import { saveResult, listResults, getResultsByJob } from './repo/results.js';
 
@@ -97,6 +98,12 @@ app.get('/api/student/result/:jobId', async (req, res) => {
 
 // ---- Boot ----
 await initDb();
+
+// Pré-chargement du modèle d'embeddings au démarrage (évite le cold start + fallback Jaccard)
+getEmbedder()
+  .then(() => console.log(`[EMB] Modèle ${process.env.EMBEDDING_MODEL || 'Xenova/all-MiniLM-L6-v2'} chargé et prêt`))
+  .catch(e => console.error('[EMB] Échec du chargement du modèle, fallback Jaccard actif:', e.message));
+
 app.listen(PORT, () => {
   console.log(`API backend sur http://localhost:${PORT}`);
 });
