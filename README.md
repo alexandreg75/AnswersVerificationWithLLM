@@ -60,8 +60,8 @@ Express API (backend :3001)
    ├── Stage 1 ─ Rules (deterministic: MCQ, numeric, known formulas)
    │     └─ decidable? ──yes──► verdict (fast exit)
    │
-   ├── Stage 2 ─ Embeddings similarity  (Xenova/all-MiniLM-L6-v2, CPU)
-   │     └─ sim_best = cosine(ans, best_ref)
+  ├── Stage 2 ─ Embeddings similarity  (Ollama/nomic-embed-text, CPU)
+  │     └─ sim_best = cosine(ans, best_ref)
    │
    ├── Stage 3 ─ Concept coverage  (weighted keywords + synonyms)
    │     └─ coverage = Σ w_k · present(k) / Σ w_k
@@ -397,7 +397,7 @@ Skip stages 1–3 entirely; use the LLM judge as the sole ground truth generator
 | **Embedding model size** (first load ~500 MB) | Cold start takes ~10–30 s | Model cached in memory after first load |
 | **Thresholds are hand-tuned** | May produce wrong verdicts on edge cases | See §9 — calibration roadmap |
 | **Concept matching is lexical** | Misses paraphrases not in `synonymes[]` | Mitigated by embedding stage; synonymes list must be maintained |
-| **Single-language** | French-centric rubrics | Model `all-MiniLM-L6-v2` supports multilingual but not optimized for French |
+| **Single-language** | French-centric rubrics | Embedding model (`nomic-embed-text` via Ollama) supports plusieurs langues mais n'est pas spécifiquement optimisé pour le français |
 | **No authentication** | Admin UI is public | Out of scope for MVP; JWT dependency is present for future use |
 | **No CI/CD** | Manual testing only | `npm run verify` script covers basic checks; GitHub Actions planned |
 | **Small question bank** | Only 8 demo questions | Easily extended via `questions.sample.js` |
@@ -446,7 +446,7 @@ apps/backend/src/
 │   ├── judge.js                  # Stage 4: LLM judge (AJV schema)
 │   ├── fuse.js                   # Fusion + fallback logic
 │   └── providers/
-│       ├── embeddings/xenova.js  # Xenova transformer embedder
+│       ├── embeddings/xenova.js  # (Legacy) Xenova embedder, now replaced by Ollama
 │       └── llm/ollama.js         # Ollama HTTP client
 ├── repo/
 │   ├── results.js                # Save / query grading results
