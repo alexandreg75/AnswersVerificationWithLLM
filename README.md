@@ -2,6 +2,8 @@
 
 > **Automatic answer grading** for student exams using a 4-stage hybrid AI pipeline: deterministic rules → semantic embeddings → concept coverage → LLM judge.
 
+**📹 Demo Video:** [YouTube](https://youtu.be/2gfJSEfAVHI?si=AM2RYZx6avxb7K4u)
+
 ---
 
 ## Table of Contents
@@ -97,10 +99,10 @@ If a rule fires → exit immediately with verdict (no embedding or LLM call).
 
 ### Stage 2 — Embedding Similarity
 
-- Model: `Xenova/all-MiniLM-L6-v2` (runs on CPU, no GPU required)
+- Model: **Ollama** with `nomic-embed-text` (768-dim vectors, fast local inference)
 - Computes cosine similarity between student answer and each reference answer
 - **`sim_best`** = max cosine similarity across all references
-- Fallback: Jaccard similarity on tokens if embeddings unavailable
+- Fallback: Jaccard similarity on tokens if Ollama embeddings unavailable
 
 ### Stage 3 — Concept Coverage
 
@@ -169,13 +171,13 @@ Final score is a weighted blend: `0.35·sim + 0.35·coverage + 0.30·llm_score`.
 |---|---|
 | Frontend | React 18 + Vite, Tailwind CSS (Admin UI) |
 | Backend | Node.js (ESM), Express 4 |
-| Embeddings | `@xenova/transformers` — `all-MiniLM-L6-v2` (CPU) |
-| LLM Judge | Ollama (local inference, any compatible model) |
+| Embeddings | **Ollama** — `nomic-embed-text` (768-dim, local inference) |
+| LLM Judge | **Ollama** — `llama2` or `neural-chat` (local inference) |
 | Schema validation | AJV 8 |
 | Database | PostgreSQL 16 (via `pg` pool) |
 | Queue (optional) | BullMQ + Redis 7 (async grading) |
 | Cache | LRU in-memory (configurable size + TTL) |
-| Infrastructure | Docker Compose |
+| Infrastructure | Docker Compose + Ollama |
 
 ---
 
@@ -252,12 +254,11 @@ Checks Node version, env file, Docker services, API health, and dependencies.
 | Variable | Default | Description |
 |---|---|---|
 | `PORT` | `3001` | Backend HTTP port |
-| `DB_URL` | `postgresql://grader:grader@localhost:5432/grader` | PostgreSQL connection string |
+| `DB_URL` | `postgresql://grader:grader@localhost:5433/grader` | PostgreSQL connection string |
 | `REDIS_URL` | _(empty)_ | Redis URL — enables async mode if set |
-| `LLM_PROVIDER` | `ollama` | LLM provider |
-| `LLM_MODEL` | _(Ollama default)_ | Model name for Ollama |
-| `OLLAMA_BASE_URL` | `http://127.0.0.1:11434` | Ollama API base URL |
-| `EMBEDDING_MODEL` | `Xenova/all-MiniLM-L6-v2` | Sentence embedding model |
+| `LLM_MODEL` | `llama2` | LLM model name (via Ollama) |
+| `OLLAMA_EMBEDDINGS_URL` | `http://127.0.0.1:11434/api/embed` | Ollama embeddings API endpoint |
+| `OLLAMA_EMBEDDINGS_MODEL` | `nomic-embed-text` | Embedding model (Ollama) |
 | `CACHE_SIZE` | `500` | LRU cache max entries |
 | `CACHE_TTL_MS` | `86400000` | LRU cache TTL (24h) |
 | `FASTJ_HIGH_SIM` | `0.82` | Gating: "clearly correct" sim threshold |

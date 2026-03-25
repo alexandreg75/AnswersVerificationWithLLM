@@ -10,7 +10,7 @@ import { initDb } from './db.js';
 import { saveResult, listResults, getResultsByJob } from './repo/results.js';
 
 console.log(`[LLM] provider=${process.env.LLM_PROVIDER || 'ollama'} model=${process.env.LLM_MODEL || '(default)'} base=${process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434'}`);
-console.log(`[EMB] model=${process.env.EMBEDDING_MODEL || 'Xenova/all-MiniLM-L6-v2'}`);
+console.log(`[EMB] model=${process.env.OLLAMA_EMBEDDINGS_MODEL || 'nomic-embed-text'} (Ollama)`);
 
 const app = express();
 app.use(cors());
@@ -99,10 +99,14 @@ app.get('/api/student/result/:jobId', async (req, res) => {
 // ---- Boot ----
 await initDb();
 
-// Pré-chargement du modèle d'embeddings au démarrage (évite le cold start + fallback Jaccard)
+// Pré-chargement du modèle d'embeddings Ollama au démarrage
+console.log('[Startup] Vérification de la disponibilité Ollama embeddings...');
 getEmbedder()
-  .then(() => console.log(`[EMB] Modèle ${process.env.EMBEDDING_MODEL || 'Xenova/all-MiniLM-L6-v2'} chargé et prêt`))
-  .catch(e => console.error('[EMB] Échec du chargement du modèle, fallback Jaccard actif:', e.message));
+  .then(() => console.log(`[Startup] ✅ Ollama embeddings prêts (${process.env.OLLAMA_EMBEDDINGS_MODEL || 'nomic-embed-text'})`))
+  .catch(e => {
+    console.warn(`[Startup] ⚠️ Ollama embeddings indisponibles: ${e.message}`);
+    console.log('[Startup] → Le système utilisera le fallback Jaccard');
+  });
 
 app.listen(PORT, () => {
   console.log(`API backend sur http://localhost:${PORT}`);

@@ -7,6 +7,7 @@
   ],
   "scripts": {
     "dev": "concurrently -n api,web,wrk -c blue,green,magenta \"npm:dev:backend\" \"npm:dev:frontend\" \"npm:dev:worker\"",
+    "dev:no-worker": "concurrently -n api,web -c blue,green \"npm:dev:backend\" \"npm:dev:frontend\"",
     "dev:backend": "npm --workspace apps/backend run dev",
     "dev:frontend": "npm --workspace apps/frontend run dev",
     "dev:worker": "npm --workspace apps/worker run dev",
